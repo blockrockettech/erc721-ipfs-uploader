@@ -10,7 +10,9 @@ const ipfs = IPFS('ipfs.infura.io', '5001', {protocol: 'https'});
 // Reset this cache file to { } to push fresh data to IPFS
 const CACHE_FILE = './data/cache.json';
 
-//IPFS meta contract based on https://github.com/ethereum/eips/issues/721
+// IPFS meta contract based on https://github.com/ethereum/eips/issues/721
+
+
 
 /*
 - meta upload should return full IPFS hash with corresponding subpaths in this format https://github.com/multiformats/multiaddr
@@ -33,7 +35,7 @@ const metaDataToIpfs = async () => {
 
             const [name, imagePath, description] = data;
             console.log(data);
-            const splitImagePath = imagePath.split('i')[0];
+            const splitImagePath = imagePath.split('.')[0];
 
             // Check cache as to not upload duplicates
             let cachedImage = getFromCache(splitImagePath);
@@ -56,6 +58,11 @@ const metaDataToIpfs = async () => {
                 console.log(ipfsImageResult);
                 console.log(`ERC721 IPFS IMAGE HASH: ${ipfsImageResult[0].hash}`);
                 cacheIpfsHashes(splitImagePath, ipfsImageResult[0].hash);
+
+                // set cached image for use in ERC721 metadata upload
+                cachedImage = ipfsImageResult[0].hash;
+
+                wait();
             }
 
             let cachedErc721CompliantMetaData = getFromCache(name);
@@ -68,7 +75,7 @@ const metaDataToIpfs = async () => {
                     description: `${description}`,
                     attributes: [],
                     external_uri: `TODO`,
-                    image: `https://ipfs.infura.io/ipfs/${ipfsImageResult[0].hash}`,
+                    image: `https://ipfs.infura.io/ipfs/${cachedImage}`,
                 };
 
                 const erc721CompliantMetaDataResult = await ipfs.add([
@@ -82,10 +89,12 @@ const metaDataToIpfs = async () => {
                 console.log(`ERC721 IPFS HASH: ${erc721CompliantMetaDataResult[0].hash}`);
 
                 cacheIpfsHashes(name, erc721CompliantMetaDataResult[0].hash);
+
+                wait();
             }
         })
         .on('end', function () {
-            console.log('done parsing...bye ;)');
+            console.log('\n\nprocessed CSV ;)');
         });
 
     stream.pipe(csvStream);
@@ -104,6 +113,10 @@ const cacheIpfsHashes = (key, hash) => {
 const getFromCache = (ipfsPath) => {
     let cache = JSON.parse(fs.readFileSync(CACHE_FILE));
     return _.get(cache, ipfsPath);
+};
+
+const wait = () => {
+    setTimeout(() => console.log(`waiting...`), 5000);
 };
 
 module.exports = {
