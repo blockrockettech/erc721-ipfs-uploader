@@ -38,7 +38,7 @@ const metaDataToIpfs = async () => {
             const splitImagePath = imagePath.split('.')[0];
 
             // Check cache as to not upload duplicates
-            let cachedImage = getFromCache(splitImagePath);
+            let cachedImage = getFromCache(`images.${splitImagePath}`);
             if (cachedImage) {
                 console.log(`Found cached version of image [${splitImagePath}]: ${cachedImage}`);
             } else {
@@ -48,6 +48,7 @@ const metaDataToIpfs = async () => {
                     image = fs.createReadStream(`./images/stina/${imagePath}`);
                 }
 
+                wait();
                 const ipfsImageResult = await ipfs.add([
                     {
                         path: `${data[1]}`,
@@ -57,15 +58,15 @@ const metaDataToIpfs = async () => {
 
                 console.log(ipfsImageResult);
                 console.log(`ERC721 IPFS IMAGE HASH: ${ipfsImageResult[0].hash}`);
-                cacheIpfsHashes(splitImagePath, ipfsImageResult[0].hash);
+                cacheIpfsHashes(`images.${splitImagePath}`, ipfsImageResult[0].hash);
 
                 // set cached image for use in ERC721 metadata upload
                 cachedImage = ipfsImageResult[0].hash;
 
-                wait();
+
             }
 
-            let cachedErc721CompliantMetaData = getFromCache(name);
+            let cachedErc721CompliantMetaData = getFromCache(`metadata.${name}`);
             if (cachedErc721CompliantMetaData) {
                 console.log(`Found cached version of [${name}]: ${cachedErc721CompliantMetaData}`);
             } else {
@@ -78,6 +79,7 @@ const metaDataToIpfs = async () => {
                     image: `https://ipfs.infura.io/ipfs/${cachedImage}`,
                 };
 
+                wait();
                 const erc721CompliantMetaDataResult = await ipfs.add([
                     {
                         path: `${erc721CompliantMetaData.name}`,
@@ -88,9 +90,7 @@ const metaDataToIpfs = async () => {
                 console.log(erc721CompliantMetaDataResult);
                 console.log(`ERC721 IPFS HASH: ${erc721CompliantMetaDataResult[0].hash}`);
 
-                cacheIpfsHashes(name, erc721CompliantMetaDataResult[0].hash);
-
-                wait();
+                cacheIpfsHashes(`metadata.${name}`, erc721CompliantMetaDataResult[0].hash);
             }
         })
         .on('end', function () {
@@ -116,7 +116,7 @@ const getFromCache = (ipfsPath) => {
 };
 
 const wait = () => {
-    setTimeout(() => console.log(`waiting...`), 5000);
+    setTimeout(() => console.log(`waiting...`), Math.floor(Math.random() * 10)  * 1000);
 };
 
 module.exports = {
