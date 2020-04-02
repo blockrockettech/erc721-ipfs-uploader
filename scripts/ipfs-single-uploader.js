@@ -3,11 +3,11 @@ const fs = require('fs');
 const _ = require('lodash');
 const streams = require('memory-streams');
 
+const ipfsHost = 'http://localhost:5001';
+const ipfs = IPFS('localhost', '5001', {protocol: 'http'});
 
-const ipfs = IPFS('ipfs.infura.io', '5001', {protocol: 'https'});
-
-// Reset this cache file to { } to push fresh data to IPFS
-const CACHE_FILE = './data/cache.json';
+// const host = 'https://ipfs.infura.io';
+// const ipfs = IPFS('ipfs.infura.io', '5001', {protocol: 'https'});
 
 // IPFS meta contract based on https://github.com/ethereum/eips/issues/721
 
@@ -24,51 +24,62 @@ const CACHE_FILE = './data/cache.json';
  */
 
 const metaDataToIpfs = async () => {
+    try {
+        const [name, imagePath, description] = [
+            'No jacket required',
+            './images/mf/bomber.png',
+            'jacket artwork by A.N. Other',
+        ];
 
-    const [name, imagePath, description] = [
-        'MetaFactory Tester Badge',
-        './images/mf/oct.jpg',
-        'Awarded to all early testers of the MetaFactory platform for their feedback and support',
-    ];
+        // const [name, imagePath, description] = [
+        //     'Mona Lisa',
+        //     './images/mf/oct.jpg',
+        //     'The worlds most famous image',
+        // ];
 
-    let image;
-    if (fs.existsSync(imagePath)) {
-        image = fs.createReadStream(imagePath);
+        let image;
+        if (fs.existsSync(imagePath)) {
+            image = fs.createReadStream(imagePath);
+        }
+
+        wait();
+
+        const ipfsImageResult = await ipfs.add([
+            {
+                path: imagePath,
+                content: image,
+            }
+        ], {recursive: false});
+
+        console.log(ipfsImageResult);
+        console.log(`ERC721 IPFS IMAGE HASH: ${ipfsImageResult[0].hash}`);
+
+        // set cached image for use in ERC721 metadata upload
+        let cachedImage = ipfsImageResult[0].hash;
+
+        let erc721CompliantMetaData = {
+            name: `${name}`,
+            description: `${description}`,
+            // attributes: ['Ephimera', 'cryptoart'],
+            // external_uri: 'TODO',
+            image: `${ipfsHost}/ipfs/${cachedImage}`,
+        };
+
+        wait();
+        const erc721CompliantMetaDataResult = await ipfs.add([
+            {
+                path: `${erc721CompliantMetaData.name}`,
+                content: new streams.ReadableStream(JSON.stringify(erc721CompliantMetaData)).read(),
+            }
+        ]);
+
+        console.log(erc721CompliantMetaDataResult);
+        console.log(`ERC721 IPFS HASH: ${ipfsHost}/ipfs/${erc721CompliantMetaDataResult[0].hash}`);
+
+        wait();
+    } catch (e) {
+        console.error(e);
     }
-
-    wait();
-
-    const ipfsImageResult = await ipfs.add([
-        {
-            path: imagePath,
-            content: image,
-        }
-    ], {recursive: false});
-
-    console.log(ipfsImageResult);
-    console.log(`ERC721 IPFS IMAGE HASH: ${ipfsImageResult[0].hash}`);
-
-    // set cached image for use in ERC721 metadata upload
-    cachedImage = ipfsImageResult[0].hash;
-
-    let erc721CompliantMetaData = {
-        name: `${name}`,
-        description: `${description}`,
-        attributes: ['MetaFactory', 'RARE'],
-        // external_uri: 'TODO',
-        image: `https://ipfs.infura.io/ipfs/${cachedImage}`,
-    };
-
-    wait();
-    const erc721CompliantMetaDataResult = await ipfs.add([
-        {
-            path: `${erc721CompliantMetaData.name}`,
-            content: new streams.ReadableStream(JSON.stringify(erc721CompliantMetaData)).read(),
-        }
-    ]);
-
-    console.log(erc721CompliantMetaDataResult);
-    console.log(`ERC721 IPFS HASH: https://ipfs.infura.io/ipfs/${erc721CompliantMetaDataResult[0].hash}`);
 };
 
 const wait = () => {
@@ -78,8 +89,5 @@ const wait = () => {
 module.exports = {
     metaDataToIpfs: metaDataToIpfs
 };
-
-// To manually upload fresh IPFS data use this and invoke it on the commandland e.g. node ./scripts/ipfs-uploader.js
-// metaDataToIpfs({ipfsPath: 'stina_jones_happy_fox'});
 
 metaDataToIpfs();
