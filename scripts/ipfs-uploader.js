@@ -12,8 +12,6 @@ const CACHE_FILE = './data/cache.json';
 
 // IPFS meta contract based on https://github.com/ethereum/eips/issues/721
 
-
-
 /*
 - meta upload should return full IPFS hash with corresponding subpaths in this format https://github.com/multiformats/multiaddr
 - e.g. /ipfs/127.0.0.1/udp/1234
