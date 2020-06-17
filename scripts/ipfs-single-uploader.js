@@ -3,11 +3,11 @@ const fs = require('fs');
 const _ = require('lodash');
 const streams = require('memory-streams');
 
-const ipfsHost = 'http://localhost:5001';
-const ipfs = IPFS('localhost', '5001', {protocol: 'http'});
+// const ipfsHost = 'http://localhost:5001';
+// const ipfs = IPFS('localhost', '5001', {protocol: 'http'});
 
-// const host = 'https://ipfs.infura.io';
-// const ipfs = IPFS('ipfs.infura.io', '5001', {protocol: 'https'});
+const ipfsHost = 'https://ipfs.infura.io';
+const ipfs = IPFS('ipfs.infura.io', '5001', {protocol: 'https'});
 
 // IPFS meta contract based on https://github.com/ethereum/eips/issues/721
 
@@ -26,16 +26,10 @@ const ipfs = IPFS('localhost', '5001', {protocol: 'http'});
 const metaDataToIpfs = async () => {
     try {
         const [name, imagePath, description] = [
-            'No jacket required',
-            './images/mf/bomber.png',
-            'jacket artwork by A.N. Other',
+            'WSC Season One Pass',
+            './images/mf/SeasonOnePass.png',
+            'This pass can be redeemed for a membership in Wicked Sunday Club for Summer 2020. Must be redeemed before the end of the season.',
         ];
-
-        // const [name, imagePath, description] = [
-        //     'Mona Lisa',
-        //     './images/mf/oct.jpg',
-        //     'The worlds most famous image',
-        // ];
 
         let image;
         if (fs.existsSync(imagePath)) {
@@ -60,8 +54,8 @@ const metaDataToIpfs = async () => {
         let erc721CompliantMetaData = {
             name: `${name}`,
             description: `${description}`,
-            // attributes: ['Ephimera', 'cryptoart'],
-            // external_uri: 'TODO',
+            attributes: [{trait_type: 'Size', value: 'Extra Large'}],
+                // external_uri: 'TODO',
             image: `${ipfsHost}/ipfs/${cachedImage}`,
         };
 
