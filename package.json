@@ -2,7 +2,7 @@
   "name": "erc721-ipfs-uploader",
   "version": "1.0.0",
   "dependencies": {
-    "fast-csv": "^4.0.2",
+    "fast-csv": "^4.3.6",
     "fs": "0.0.1-security",
     "ipfs-api": "^26.1.2",
     "lodash": "^4.17.15",
